@@ -18,12 +18,14 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/Malek-Zaag/MyNewOperator/api/v1beta1"
 	watchersv1beta1 "github.com/Malek-Zaag/MyNewOperator/api/v1beta1"
 )
 
@@ -48,7 +50,16 @@ type WatcherReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
-
+	log.Log.Info("Reconcile loop here")
+	watcher := &v1beta1.Watcher{}
+	err := r.Get(ctx, req.NamespacedName, watcher)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	startTime := watcher.Spec.Start
+	endTime := watcher.Spec.End
+	replicas := watcher.Spec.Replicas
+	currentHour := time.Now().UTC().Hour()
 	// TODO(user): your logic here
 
 	return ctrl.Result{}, nil
