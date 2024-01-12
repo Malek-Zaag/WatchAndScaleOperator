@@ -29,7 +29,15 @@ type WatcherSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Watcher. Edit watcher_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Foo string `json:"foo,omitempty"`
+	Start       int              `json:"start"`
+	End         int              `json:"end"`
+	Replicas    int              `json:"replicas"`
+	Deployments []NamespacedName `json:"deployments"`
+}
+type NamespacedName struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
 }
 
 // WatcherStatus defines the observed state of Watcher

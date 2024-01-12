@@ -10,3 +10,9 @@ metadata:
   name: watcher-sample
 spec:
   # TODO(user): Add fields here
+  start: 4
+  end: 6
+  replicas: 5
+  deployments: 
+    - name: abc
+      namespace: default 
