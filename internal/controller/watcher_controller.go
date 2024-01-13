@@ -69,28 +69,34 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	for _, deploy := range watcher.Spec.Deployments {
 		log.Log.Info("here")
 		if currentHour >= startTime && currentHour <= endTime {
-			log.Log.Info("Scaling up replicas")
-			deployment := &v1.Deployment{}
-			err := r.Get(ctx, types.NamespacedName{
-				Namespace: deploy.Namespace,
-				Name:      deploy.Name,
-			}, deployment)
+			err := ScaleDeployment(ctx, r, deploy, replicas)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
-			if deployment.Spec.Replicas != &replicas {
-				deployment.Spec.Replicas = &replicas
-				err := r.Update(ctx, deployment)
-				if err != nil {
-					return ctrl.Result{}, err
-				}
-			}
 		}
 	}
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: 30}, nil
 }
 
-// func ScaleDeployment(ctx context.Context)
+func ScaleDeployment(ctx context.Context, r *WatcherReconciler, deploy watchersv1beta1.NamespacedName, replicas int32) error {
+	log.Log.Info("Scaling up replicas")
+	deployment := &v1.Deployment{}
+	err := r.Get(ctx, types.NamespacedName{
+		Namespace: deploy.Namespace,
+		Name:      deploy.Name,
+	}, deployment)
+	if err != nil {
+		return err
+	}
+	if deployment.Spec.Replicas != &replicas {
+		deployment.Spec.Replicas = &replicas
+		err := r.Update(ctx, deployment)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *WatcherReconciler) SetupWithManager(mgr ctrl.Manager) error {
