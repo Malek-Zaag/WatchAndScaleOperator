@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	v1 "k8s.io/api/apps/v1"
@@ -62,9 +63,13 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	endTime := watcher.Spec.End
 	replicas := watcher.Spec.Replicas
 	currentHour := time.Now().UTC().Hour()
+	log.Log.Info(fmt.Sprintf("The time now is %d", currentHour))
+	log.Log.Info(fmt.Sprintf("The start time is %d", startTime))
 	// TODO(user): your logic here
 	for _, deploy := range watcher.Spec.Deployments {
-		if currentHour > startTime && currentHour < endTime {
+		log.Log.Info("here")
+		if currentHour >= startTime && currentHour <= endTime {
+			log.Log.Info("Scaling up replicas")
 			deployment := &v1.Deployment{}
 			err := r.Get(ctx, types.NamespacedName{
 				Namespace: deploy.Namespace,

@@ -10,8 +10,8 @@ metadata:
   name: watcher-sample
 spec:
   # TODO(user): Add fields here
-  start: 4
-  end: 6
+  start: 10
+  end: 23
   replicas: 5
   deployments: 
     - name: abc
