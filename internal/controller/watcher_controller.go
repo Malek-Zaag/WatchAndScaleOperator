@@ -22,6 +22,7 @@ import (
 	"time"
 
 	v1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -31,6 +32,8 @@ import (
 	"github.com/Malek-Zaag/MyNewOperator/api/v1beta1"
 	watchersv1beta1 "github.com/Malek-Zaag/MyNewOperator/api/v1beta1"
 )
+
+var logger = log.Log.WithName("controller_scaler")
 
 // WatcherReconciler reconciles a Watcher object
 type WatcherReconciler struct {
@@ -52,33 +55,42 @@ type WatcherReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-	log.Log.Info("Reconcile loop here")
+
+	log := logger.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
+	log.Info("Reconcile loop here")
 	watcher := &v1beta1.Watcher{}
 	err := r.Get(ctx, req.NamespacedName, watcher)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("Scaler resource not found. Ignoring since object must be deleted.")
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "Failed")
 		return ctrl.Result{}, err
 	}
+
 	startTime := watcher.Spec.Start
 	endTime := watcher.Spec.End
 	replicas := watcher.Spec.Replicas
 	currentHour := time.Now().UTC().Hour()
-	log.Log.Info(fmt.Sprintf("The time now is %d", currentHour))
-	log.Log.Info(fmt.Sprintf("The start time is %d", startTime))
+	log.Info(fmt.Sprintf("The time now is %d", currentHour))
+	log.Info(fmt.Sprintf("The start time is %d", startTime))
+
 	// TODO(user): your logic here
 	for _, deploy := range watcher.Spec.Deployments {
-		log.Log.Info("here")
 		if currentHour >= startTime && currentHour <= endTime {
+			log.Info("Calling Scaling function")
 			err := ScaleDeployment(ctx, r, deploy, replicas)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
 		}
 	}
-	return ctrl.Result{RequeueAfter: 30}, nil
+	return ctrl.Result{RequeueAfter: time.Duration(30 * time.Second)}, nil
 }
 
 func ScaleDeployment(ctx context.Context, r *WatcherReconciler, deploy watchersv1beta1.NamespacedName, replicas int32) error {
+
 	log.Log.Info("Scaling up replicas")
 	deployment := &v1.Deployment{}
 	err := r.Get(ctx, types.NamespacedName{
