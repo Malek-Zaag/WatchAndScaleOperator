@@ -49,6 +49,7 @@ spec:
               end:
                 type: integer
               replicas:
+                format: int32
                 type: integer
               start:
                 description: Foo is an example field of Watcher. Edit watcher_types.go
