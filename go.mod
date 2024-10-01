@@ -2,7 +2,7 @@ module github.com/Malek-Zaag/MyNewOperator
 
 go 1.22.0
 
-toolchain go1.23.1
+toolchain go1.23.2
 
 require (
 	github.com/onsi/ginkgo/v2 v2.20.2
